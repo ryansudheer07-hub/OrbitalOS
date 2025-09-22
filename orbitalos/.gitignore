@@ -1,0 +1,52 @@
+﻿# Node / Frontend
+node_modules/
+dist/
+.env
+.env.local
+.env.*.local
+
+# Rust / Backend
+target/
+Cargo.lock
+
+# Python / AI
+__pycache__/
+*.pyc
+.venv/
+.env
+*.ipynb_checkpoints
+ai/models/
+ai/notebooks/.ipynb_checkpoints
+
+# Secrets / Configs
+*.pem
+*.key
+*.crt
+*.p12
+*.db
+*.sqlite
+.envrc
+secrets/
+config/local_*.yaml
+config/*.local.json
+
+# Logs / Temp
+*.log
+logs/
+tmp/
+*.swp
+
+# OS / IDE junk
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.iml
+
+# Large files
+*.tar.gz
+*.zip
+*.bin
+*.h5
+*.pt
+*.onnx
