@@ -1,227 +1,161 @@
-import React, { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import React, { useState, useEffect, useRef } from 'react'
+import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { Satellite, Shield, Zap, ArrowRight, Globe, Users, BarChart3 } from 'lucide-react'
+
+// Simple CSS-based Starfield Component (more reliable than canvas)
+const Starfield = () => {
+  const [stars, setStars] = useState([])
+
+  useEffect(() => {
+    // Generate random stars
+    const generateStars = () => {
+      const starArray = []
+      const starCount = window.innerWidth < 768 ? 100 : 200
+      
+      for (let i = 0; i < starCount; i++) {
+        starArray.push({
+          id: i,
+          left: Math.random() * 100,
+          top: Math.random() * 100,
+          animationDelay: Math.random() * 3,
+          animationDuration: 2 + Math.random() * 3,
+          size: Math.random() * 3 + 1,
+          opacity: 0.3 + Math.random() * 0.7,
+        })
+      }
+      setStars(starArray)
+    }
+
+    generateStars()
+    
+    // Regenerate stars on window resize
+    const handleResize = () => {
+      generateStars()
+    }
+    
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  return (
+    <div className="absolute inset-0 overflow-hidden bg-gradient-to-b from-gray-900 via-blue-900 to-black">
+      {stars.map((star) => (
+        <div
+          key={star.id}
+          className="absolute rounded-full bg-white animate-pulse"
+          style={{
+            left: `${star.left}%`,
+            top: `${star.top}%`,
+            width: `${star.size}px`,
+            height: `${star.size}px`,
+            opacity: star.opacity,
+            animationDelay: `${star.animationDelay}s`,
+            animationDuration: `${star.animationDuration}s`,
+          }}
+        />
+      ))}
+      
+      {/* Additional floating elements for depth */}
+      <div className="absolute inset-0">
+        <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-blue-500 rounded-full opacity-10 blur-3xl animate-pulse" />
+        <div className="absolute top-3/4 right-1/4 w-48 h-48 bg-purple-500 rounded-full opacity-10 blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
+        <div className="absolute bottom-1/4 left-1/3 w-24 h-24 bg-pink-500 rounded-full opacity-10 blur-3xl animate-pulse" style={{ animationDelay: '4s' }} />
+      </div>
+    </div>
+  )
+}
 
 const LandingPage = () => {
   const navigate = useNavigate()
-  const [currentSection, setCurrentSection] = useState(0)
-  const [isScrolling, setIsScrolling] = useState(false)
+  const [isEntering, setIsEntering] = useState(false)
 
-  const sections = [
-    {
-      id: 'hero',
-      title: 'Predict. Prevent. Protect.',
-      subtitle: 'Secure satellite operations with AI-driven collision prediction',
-      description: 'OrbitalOS provides real-time risk assessment, automated conflict resolution, and intelligent maneuver recommendations for satellite operators worldwide.',
-      icon: Shield,
-      color: 'from-blue-600 to-purple-600',
-    },
-    {
-      id: 'visualization',
-      title: '3D Space Visualization',
-      subtitle: 'See the cosmos like never before',
-      description: 'Interactive 3D Earth with live satellite tracking, orbit traces, and risk-based color coding. Monitor thousands of objects in real-time.',
-      icon: Globe,
-      color: 'from-green-600 to-teal-600',
-    },
-    {
-      id: 'analytics',
-      title: 'Advanced Analytics',
-      subtitle: 'Data-driven insights for better decisions',
-      description: 'Comprehensive dashboards with risk trends, collision statistics, and operator performance metrics.',
-      icon: BarChart3,
-      color: 'from-purple-600 to-pink-600',
-    },
-  ]
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (isScrolling) return
-      
-      setIsScrolling(true)
-      const scrollY = window.scrollY
-      const windowHeight = window.innerHeight
-      const sectionIndex = Math.floor(scrollY / windowHeight)
-      
-      setCurrentSection(Math.min(sectionIndex, sections.length - 1))
-      
-      setTimeout(() => setIsScrolling(false), 100)
-    }
-
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [isScrolling, sections.length])
-
-  const scrollToSection = (index) => {
-    window.scrollTo({
-      top: index * window.innerHeight,
-      behavior: 'smooth'
-    })
+  const handleEnterOrbit = () => {
+    setIsEntering(true)
+    // Add whoosh animation delay before navigation
+    setTimeout(() => {
+      navigate('/login')
+    }, 800)
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      {/* Navigation */}
-      <nav className="fixed top-0 w-full z-50 bg-gray-900/80 backdrop-blur-sm border-b border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-2">
-              <Satellite className="h-8 w-8 text-blue-500" />
-              <span className="text-xl font-bold">OrbitalOS</span>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => scrollToSection(0)}
-                className="text-gray-300 hover:text-white transition-colors"
-              >
-                Home
-              </button>
-              <button
-                onClick={() => scrollToSection(1)}
-                className="text-gray-300 hover:text-white transition-colors"
-              >
-                Features
-              </button>
-              <button
-                onClick={() => scrollToSection(2)}
-                className="text-gray-300 hover:text-white transition-colors"
-              >
-                Analytics
-              </button>
-              <button
-                onClick={() => navigate('/login')}
-                className="btn btn-primary"
-              >
-                Login
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      {/* Hero Section */}
-      <section className="h-screen flex items-center justify-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 to-purple-900/20" />
-        <div className="absolute inset-0">
-          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
-        </div>
+    <div className="relative min-h-screen overflow-hidden">
+      {/* Starfield Background */}
+      <Starfield />
+      
+      {/* Content Overlay */}
+      <div className="absolute inset-0 bg-black bg-opacity-30 z-10" />
+      
+      {/* Main Content */}
+      <div className="relative z-20 min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 text-center">
+        {/* Main Slogan */}
+        <motion.h1
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1, ease: "easeOut" }}
+          className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold text-white mb-8 tracking-wide max-w-6xl"
+        >
+          Every void needs an order.
+        </motion.h1>
         
-        <div className="relative z-10 text-center max-w-4xl mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
+        {/* Subtext */}
+        <motion.p
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1, delay: 0.5, ease: "easeOut" }}
+          className="text-lg sm:text-xl md:text-2xl lg:text-3xl text-gray-200 mb-12 max-w-5xl leading-relaxed"
+        >
+          We make the crowded sky navigable — secure your orbit, book your launch, chart your path.
+        </motion.p>
+        
+        {/* CTA Buttons */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.8, delay: 1 }}
+          className="flex flex-col sm:flex-row gap-4 items-center justify-center"
+        >
+          <button
+            onClick={handleEnterOrbit}
+            disabled={isEntering}
+            className={`
+              relative px-8 sm:px-12 py-4 sm:py-6 text-xl sm:text-2xl font-bold text-white
+              bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600
+              rounded-full shadow-2xl transform transition-all duration-300
+              hover:scale-105 hover:shadow-3xl
+              ${isEntering ? 'scale-110 animate-pulse' : ''}
+            `}
+            style={{
+              boxShadow: isEntering 
+                ? '0 0 50px rgba(59, 130, 246, 0.8)' 
+                : '0 10px 30px rgba(0, 0, 0, 0.3), 0 0 20px rgba(59, 130, 246, 0.4)'
+            }}
           >
-            <h1 className="text-6xl md:text-8xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-              OrbitalOS
-            </h1>
-            <p className="text-2xl md:text-3xl font-light mb-8 text-gray-300">
-              Predict. Prevent. Protect.
-            </p>
-            <p className="text-lg md:text-xl text-gray-400 mb-12 max-w-2xl mx-auto">
-              Secure satellite operations platform with AI-driven collision prediction and intelligent booking system
-            </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button
-                onClick={() => navigate('/login')}
-                className="btn btn-primary text-lg px-8 py-4 flex items-center justify-center space-x-2"
-              >
-                <span>Get Started</span>
-                <ArrowRight className="h-5 w-5" />
-              </button>
-              <button
-                onClick={() => scrollToSection(1)}
-                className="btn btn-secondary text-lg px-8 py-4"
-              >
-                Learn More
-              </button>
-            </div>
-          </motion.div>
-        </div>
+            {isEntering ? 'Entering Orbit...' : 'Enter Orbit'}
+          </button>
 
-        {/* Scroll indicator */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
-          <motion.div
-            animate={{ y: [0, 10, 0] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="w-6 h-10 border-2 border-gray-400 rounded-full flex justify-center"
+          <button
+            onClick={() => navigate('/solar')}
+            className="
+              px-6 sm:px-8 py-3 sm:py-4 text-lg sm:text-xl font-semibold text-white
+              bg-gradient-to-r from-purple-600 to-pink-600 border-2 border-purple-400
+              rounded-full shadow-xl transform transition-all duration-300
+              hover:scale-105 hover:shadow-2xl hover:border-purple-300
+            "
           >
-            <div className="w-1 h-3 bg-gray-400 rounded-full mt-2" />
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Feature Sections */}
-      {sections.slice(1).map((section, index) => (
-        <section key={section.id} className="h-screen flex items-center justify-center relative">
-          <div className="max-w-6xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8 }}
-              className="space-y-6"
-            >
-              <div className={`inline-flex p-3 rounded-xl bg-gradient-to-r ${section.color}`}>
-                <section.icon className="h-8 w-8 text-white" />
-              </div>
-              <h2 className="text-4xl md:text-5xl font-bold">{section.title}</h2>
-              <h3 className="text-xl md:text-2xl text-gray-300">{section.subtitle}</h3>
-              <p className="text-lg text-gray-400">{section.description}</p>
-            </motion.div>
-            
-            <motion.div
-              initial={{ opacity: 0, x: 50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8 }}
-              className="relative"
-            >
-              <div className={`w-full h-96 rounded-2xl bg-gradient-to-br ${section.color} p-8 flex items-center justify-center`}>
-                <div className="text-center text-white">
-                  <section.icon className="h-24 w-24 mx-auto mb-4 opacity-80" />
-                  <p className="text-lg opacity-90">Interactive Demo Coming Soon</p>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </section>
-      ))}
-
-      {/* CTA Section */}
-      <section className="h-screen flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
-        <div className="text-center max-w-4xl mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <h2 className="text-4xl md:text-6xl font-bold mb-6">
-              Ready to Secure Your Satellites?
-            </h2>
-            <p className="text-xl text-gray-300 mb-12 max-w-2xl mx-auto">
-              Join leading satellite operators who trust OrbitalOS for collision prediction and operational safety.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button
-                onClick={() => navigate('/login')}
-                className="btn btn-primary text-lg px-8 py-4"
-              >
-                Start Free Trial
-              </button>
-              <button
-                onClick={() => navigate('/login')}
-                className="btn btn-secondary text-lg px-8 py-4"
-              >
-                Schedule Demo
-              </button>
-            </div>
-          </motion.div>
-        </div>
-      </section>
+            🌍 Explore Solar System
+          </button>
+        </motion.div>
+        
+        {/* Hint Text */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1, delay: 1.5 }}
+          className="text-gray-400 text-sm sm:text-base mt-8 opacity-70"
+        >
+          Click to begin your orbital journey
+        </motion.p>
+      </div>
     </div>
   )
 }
