@@ -2,6 +2,7 @@ import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './stores/authStore'
 import LandingPage from './pages/LandingPage'
+import SolarSystemLanding from './pages/SolarSystemLanding'
 import LoginPage from './pages/LoginPage'
 import Dashboard from './pages/Dashboard'
 import Visualizer from './pages/Visualizer'
@@ -19,6 +20,7 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
+      <Route path="/solar" element={<SolarSystemLanding />} />
       <Route path="/login" element={<LoginPage />} />
       
       {/* Protected routes */}
