@@ -65,3 +65,5 @@ Thumbs.db
 *.pt
 *.onnx
 ai/gp.csv
+backend/migrations/20250929110000_enable_pgcrypto.sql
+backend/migrations/20250929111000_create_core_tables.sql
