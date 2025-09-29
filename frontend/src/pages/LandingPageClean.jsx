@@ -1,15 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import SatelliteVisualization from '../components/SatelliteVisualization'
 
 function LandingPage() {
   const navigate = useNavigate()
   const [isEntering, setIsEntering] = useState(false)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+  const [isMenuExpanded, setIsMenuExpanded] = useState(false)
   
   // Refs for smooth scrolling to sections
   const heroRef = useRef(null)
   const featuresRef = useRef(null)
   const solarSystemRef = useRef(null)
+  
+  // Navigation scroll functions
+  const scrollToSection = (ref) => {
+    ref.current?.scrollIntoView({ behavior: 'smooth' })
+  }
 
   useEffect(() => {
     const handleMouseMove = (e) => {
@@ -30,8 +37,68 @@ function LandingPage() {
     }, 800)
   }
 
+  // Navigation menu items
+  const navigationItems = [
+    { label: 'Home', action: () => scrollToSection(heroRef), icon: '🏠' },
+    { label: 'Features', action: () => scrollToSection(featuresRef), icon: '✨' },
+    { label: 'Book Orbit', action: () => navigate('/booking'), icon: '🛰️' },
+    { label: 'Launches', action: () => navigate('/launches'), icon: '🚀' },
+    { label: 'Compliance', action: () => navigate('/compliance'), icon: '📋' },
+    { label: 'AI Co-Pilot', action: () => navigate('/ai-copilot'), icon: '🤖' },
+    { label: 'Contact', action: () => navigate('/contact'), icon: '📧' },
+  ]
+
   return (
     <>
+      {/* Collapsible Right Side Navigation Panel */}
+      <div className="fixed right-6 top-1/2 transform -translate-y-1/2 z-50">
+        <div className={`bg-black/20 backdrop-blur-md border border-white/10 rounded-2xl shadow-2xl transition-all duration-300 ${
+          isMenuExpanded ? 'p-4' : 'p-2'
+        }`}>
+          
+          {/* Toggle Button */}
+          <button
+            onClick={() => setIsMenuExpanded(!isMenuExpanded)}
+            className="w-full flex items-center justify-center p-3 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-300 mb-2"
+          >
+            <span className={`text-xl transition-transform duration-300 ${isMenuExpanded ? 'rotate-180' : ''}`}>
+              ☰
+            </span>
+            {isMenuExpanded && (
+              <span className="ml-3 text-sm font-medium animate-fade-in">
+                Menu
+              </span>
+            )}
+          </button>
+
+          {/* Navigation Items */}
+          <div className="space-y-1">
+            {navigationItems.map((item, index) => (
+              <button
+                key={index}
+                onClick={item.action}
+                className={`w-full flex items-center text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-300 group ${
+                  isMenuExpanded ? 'px-4 py-3 space-x-3' : 'p-3 justify-center'
+                }`}
+                title={!isMenuExpanded ? item.label : ''}
+              >
+                <span className={`text-lg group-hover:scale-110 transition-transform duration-300 ${
+                  !isMenuExpanded ? 'text-xl' : ''
+                }`}>
+                  {item.icon}
+                </span>
+                
+                {isMenuExpanded && (
+                  <span className="text-sm font-medium whitespace-nowrap animate-fade-in">
+                    {item.label}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* Floating Reserve Orbit CTA */}
       <button
         onClick={() => navigate('/booking')}
@@ -99,11 +166,18 @@ function LandingPage() {
           <div className="text-2xl font-bold text-white">
             OrbixX
           </div>
+          
+          {/* Navigation Menu */}
+          <nav className="hidden md:flex items-center space-x-8">
+            <a href="#" className="text-white hover:text-gray-300 transition-colors">Home</a>
+            <a href="#" className="text-white hover:text-gray-300 transition-colors">Features</a>
+            <a href="#" className="text-white hover:text-gray-300 transition-colors">Book Orbit</a>
+          </nav>
         </div>
 
         {/* Main Hero Content */}
         <div className="relative z-10 text-center max-w-4xl mx-auto px-6">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
+          <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
             Every void needs an order.
           </h1>
           
@@ -120,8 +194,30 @@ function LandingPage() {
         </div>
       </div>
 
-      {/* Features placeholder section for navigation */}
-      <div ref={featuresRef} className="h-1 absolute -top-20"></div>
+      {/* Satellite Tracking Section */}
+      <div ref={solarSystemRef} className="relative">
+        {/* Features placeholder section for navigation */}
+        <div ref={featuresRef} className="h-1 absolute -top-20"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-black via-gray-900 to-black">
+          <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-purple-900 to-transparent opacity-40"></div>
+        </div>
+        
+        <div className="relative z-10 text-center py-16 px-4">
+          <h2 
+            className="text-4xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 mb-6"
+            style={{
+              textShadow: '0 0 30px rgba(147, 197, 253, 0.5)',
+            }}
+          >
+            Live Satellite Tracking
+          </h2>
+          <p className="text-xl md:text-2xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed">
+            Real-time visualization of satellites, space debris, and orbital paths around Earth
+          </p>
+        </div>
+        
+        <SatelliteVisualization />
+      </div>
     </>
   )
 }
