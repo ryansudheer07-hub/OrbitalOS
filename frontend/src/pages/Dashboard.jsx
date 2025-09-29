@@ -1,5 +1,5 @@
 import React from 'react'
-import SatelliteVisualization from '../components/SatelliteVisualization'
+import SatelliteVisualizationNASA from '../components/SatelliteVisualizationNASA'
 
 function Dashboard() {
   return (
@@ -37,7 +37,7 @@ function Dashboard() {
             <p className="text-gray-300">Real-time 3D visualization of orbital objects</p>
           </div>
           <div className="h-[600px]">
-            <SatelliteVisualization />
+            <SatelliteVisualizationNASA />
           </div>
         </div>
       </div>
