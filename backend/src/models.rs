@@ -1,4 +1,17 @@
+#[derive(Debug, Serialize)]
+pub struct ErrorResponse {
+    pub error: String,
+    pub message: Option<String>,
+}
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Provider {
+    pub id: Uuid,
+    pub user_id: Uuid,
+    pub metadata_encrypted: Vec<u8>,
+    pub created_at: DateTime<Utc>,
+}
 use serde::{Deserialize, Serialize};
+use validator::Validate;
 use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
@@ -120,15 +133,19 @@ pub enum AlertSeverity {
 }
 
 // Request/Response DTOs
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Validate)]
 pub struct LoginRequest {
+    #[validate(email)]
     pub email: String,
+    #[validate(length(min = 8, message = "Password must be at least 8 characters"))]
     pub password: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Validate)]
 pub struct RegisterRequest {
+    #[validate(email)]
     pub email: String,
+    #[validate(length(min = 8, message = "Password must be at least 8 characters"))]
     pub password: String,
     pub role: UserRole,
 }
@@ -184,4 +201,32 @@ pub struct RiskTrend {
     pub date: String,
     pub risk_count: i64,
     pub operator: String,
+}
+
+#[derive(Serialize, Deserialize, FromRow)]
+pub struct Launch {
+    pub id: uuid::Uuid,
+    pub provider_id: uuid::Uuid,
+    pub launch_name: String,
+    pub launch_date: chrono::DateTime<chrono::Utc>,
+    pub orbit_type: String,
+    pub payload_capacity_kg: i32,
+    // other fields from Launch Library 2 API as needed
+}
+
+#[derive(Serialize, Deserialize, FromRow)]
+pub struct Booking {
+    pub id: uuid::Uuid,
+    pub launch_id: uuid::Uuid,
+    pub user_id: uuid::Uuid,
+    pub payload_description: String,
+    pub booking_date: chrono::DateTime<chrono::Utc>,
+    pub status: String, // e.g. "booked", "cancelled"
+}
+#[derive(Serialize, Deserialize, FromRow)]
+pub struct ComplianceReport {
+    pub id: uuid::Uuid,
+    pub provider_id: uuid::Uuid,
+    pub report_date: chrono::DateTime<chrono::Utc>,
+    pub encrypted_pdf: Vec<u8>,   // AES-256 encrypted PDF file bytes
 }
