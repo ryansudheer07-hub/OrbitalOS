@@ -2,13 +2,13 @@ import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './stores/authStore'
 import LandingPage from './pages/LandingPage'
-import SolarSystemLanding from './pages/SolarSystemLanding'
 import LoginPage from './pages/LoginPage'
 import Dashboard from './pages/Dashboard'
 import Visualizer from './pages/Visualizer'
 import BookingPage from './pages/BookingPage'
 import AlertsPage from './pages/AlertsPage'
 import LoadingSpinner from './components/LoadingSpinner'
+import Layout from './components/Layout'
 
 function App() {
   const { user, isLoading } = useAuthStore()
@@ -20,25 +20,24 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
-      <Route path="/solar" element={<SolarSystemLanding />} />
       <Route path="/login" element={<LoginPage />} />
       
-      {/* Protected routes */}
+      {/* Protected routes with Layout (includes Navigation) */}
       <Route 
         path="/dashboard" 
-        element={user ? <Dashboard /> : <Navigate to="/login" />} 
+        element={user ? <Layout><Dashboard /></Layout> : <Navigate to="/login" />} 
       />
       <Route 
         path="/visualizer" 
-        element={user ? <Visualizer /> : <Navigate to="/login" />} 
+        element={user ? <Layout><Visualizer /></Layout> : <Navigate to="/login" />} 
       />
       <Route 
         path="/booking" 
-        element={user ? <BookingPage /> : <Navigate to="/login" />} 
+        element={user ? <Layout><BookingPage /></Layout> : <Navigate to="/login" />} 
       />
       <Route 
         path="/alerts" 
-        element={user ? <AlertsPage /> : <Navigate to="/login" />} 
+        element={user ? <Layout><AlertsPage /></Layout> : <Navigate to="/login" />} 
       />
       
       {/* Catch all route */}
