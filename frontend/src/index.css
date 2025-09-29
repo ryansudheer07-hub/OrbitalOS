@@ -94,3 +94,19 @@
 .animate-spin-reverse-slow {
   animation: spin-reverse-slow 80s linear infinite;
 }
+
+/* Collapsible menu animations */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
