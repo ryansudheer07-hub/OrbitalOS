@@ -4,10 +4,22 @@ dist/
 .env
 .env.local
 .env.*.local
+frontend/.env
+frontend/.env.*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.eslintcache
+.vite/
 
 # Rust / Backend
 target/
 Cargo.lock
+.sqlx/
+backend/.env
+backend/.env.*
+*.sqlite3
 
 # Python / AI
 __pycache__/
@@ -42,6 +54,8 @@ Thumbs.db
 .vscode/
 .idea/
 *.iml
+*.suo
+*.user
 
 # Large files
 *.tar.gz
@@ -50,3 +64,4 @@ Thumbs.db
 *.h5
 *.pt
 *.onnx
+ai/gp.csv
