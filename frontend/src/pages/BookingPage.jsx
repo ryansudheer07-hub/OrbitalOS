@@ -1,15 +1,20 @@
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useForm } from 'react-hook-form'
-import { Calendar, Clock, Satellite, AlertCircle, CheckCircle } from 'lucide-react'
-import { useBookingsStore } from '../stores/dataStores'
-import { useSatellitesStore } from '../stores/dataStores'
+import { Calendar, Clock, AlertCircle, CheckCircle } from 'lucide-react'
+import { useEnhancedBookingsStore, useEnhancedSatellitesStore } from '../stores/enhancedStores'
+import EnhancedSatelliteService from '../services/satelliteService_enhanced'
 import toast from 'react-hot-toast'
+import { api } from '../stores/authStore'
 
 const BookingPage = () => {
-  const { createBooking, isLoading } = useBookingsStore()
-  const { satellites } = useSatellitesStore()
+  const { createBooking, isLoading } = useEnhancedBookingsStore()
+  const { satellites } = useEnhancedSatellitesStore()
   const [conflictCheck, setConflictCheck] = useState(null)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [analysisError, setAnalysisError] = useState(null)
+  
+  const satelliteService = new EnhancedSatelliteService()
   
   const { register, handleSubmit, watch, formState: { errors } } = useForm()
   
@@ -17,40 +22,141 @@ const BookingPage = () => {
   const watchedStartTime = watch('start_time')
   const watchedEndTime = watch('end_time')
 
+  const selectedSatellite = useMemo(
+    () => satellites.find((sat) => sat.id === watchedSatellite),
+    [satellites, watchedSatellite]
+  )
+
+  const windowMinutes = useMemo(() => {
+    if (!watchedStartTime || !watchedEndTime) {
+      return null
+    }
+    const start = new Date(watchedStartTime)
+    const end = new Date(watchedEndTime)
+    const diff = (end.getTime() - start.getTime()) / 60000
+    return Number.isFinite(diff) && diff > 0 ? Math.max(10, Math.round(diff)) : null
+  }, [watchedStartTime, watchedEndTime])
+
+  const formatTimestamp = (value) => {
+    if (!value) {
+      return '—'
+    }
+    const date = new Date(value)
+    if (Number.isNaN(date.getTime())) {
+      return '—'
+    }
+    return date.toLocaleString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    })
+  }
+
+  // Map operation types to reservation types
+  const mapOperationToReservationType = (operationType) => {
+    const mapping = {
+      'launch_window': 'LaunchCorridor',
+      'orbit_shift': 'OperationalSlot',
+      'payload_activation': 'OperationalSlot',
+      'maneuver': 'MaintenanceBBox'
+    }
+    return mapping[operationType] || 'OperationalSlot'
+  }
+
   const onSubmit = async (data) => {
     try {
-      const result = await createBooking({
-        satellite_id: data.satellite_id,
-        operation_type: data.operation_type,
-        start_time: new Date(data.start_time),
-        end_time: new Date(data.end_time)
-      })
-      
-      if (result.status === 'rejected') {
-        setConflictCheck({
-          hasConflict: true,
-          reason: result.reason
-        })
-      } else {
-        setConflictCheck({
-          hasConflict: false,
-          message: 'Booking approved successfully!'
-        })
+      const selectedSat = satellites.find(s => s.id === data.satellite_id)
+      if (!selectedSat) {
+        toast.error('Please select a valid satellite')
+        return
       }
+
+      // Create reservation request using enhanced API structure
+      const reservationRequest = {
+        owner: "OrbitalOS User", // TODO: Get from auth
+        reservation_type: mapOperationToReservationType(data.operation_type),
+        start_time: new Date(data.start_time).toISOString(),
+        end_time: new Date(data.end_time).toISOString(),
+        center_tle: {
+          norad_id: selectedSat.norad_id || selectedSat.id,
+          name: selectedSat.name,
+          tle_line1: selectedSat.tle_line1 || "",
+          tle_line2: selectedSat.tle_line2 || ""
+        },
+        protection_radius_km: 5.0, // Default 5km protection radius
+        priority_level: "Medium",
+        constraints: {
+          max_conjunction_probability: 0.001,
+          minimum_separation_km: 1.0,
+          notification_threshold_hours: 24,
+          allow_debris_tracking: true,
+          coordinate_system: "ECI"
+        }
+      }
+
+      const result = await satelliteService.createReservation(reservationRequest)
+      
+      // Check for conflicts immediately after creation
+      if (result.reservation_id) {
+        const conflictCheck = await satelliteService.checkReservationConflicts(result.reservation_id)
+        if (conflictCheck.conflicts_found > 0) {
+          setConflictCheck({
+            hasConflict: true,
+            reason: `Found ${conflictCheck.conflicts_found} potential conflicts. Risk score: ${conflictCheck.total_risk_score.toFixed(2)}`
+          })
+        } else {
+          setConflictCheck({ hasConflict: false })
+        }
+      }
+
+      toast.success('Orbital reservation created successfully')
+      reset()
     } catch (error) {
-      toast.error('Failed to create booking')
+      console.error('Reservation failed:', error)
+      toast.error('Failed to create orbital reservation')
     }
   }
 
-  const checkConflicts = () => {
-    if (watchedSatellite && watchedStartTime && watchedEndTime) {
-      // Simulate conflict check
-      const hasConflict = Math.random() > 0.7
+  const checkConflicts = async () => {
+    if (!watchedSatellite || !watchedStartTime || !watchedEndTime) {
+      return
+    }
+
+    setIsAnalyzing(true)
+    setAnalysisError(null)
+
+    try {
+      const launchTimeIso = new Date(watchedStartTime).toISOString()
+
+      const response = await api.post('/tle/analyze', {
+        launch_vehicle: selectedSatellite?.name || 'Orbital launch',
+        launch_time: launchTimeIso,
+        desired_altitude_km: selectedSatellite?.altitude ?? 550,
+        desired_inclination_deg: selectedSatellite?.inclination ?? 53,
+        launch_site_lat_deg: null,
+        launch_site_lon_deg: null,
+        payload_mass_kg: undefined,
+        window_minutes: windowMinutes ?? undefined,
+      })
+
+      const analysis = response.data
+      const hasConflict = Array.isArray(analysis.conflicts) && analysis.conflicts.length > 0
+
       setConflictCheck({
         hasConflict,
-        reason: hasConflict ? 'Time slot conflicts with existing operations' : null,
-        message: hasConflict ? null : 'No conflicts detected'
+        analysis,
       })
+
+      toast.success('Launch window analyzed with SGP4 propagation')
+    } catch (error) {
+      console.error('Launch analysis failed', error)
+      setAnalysisError('Unable to analyze launch window. Please try again.')
+      toast.error('Conflict analysis failed')
+    } finally {
+      setIsAnalyzing(false)
     }
   }
 
@@ -156,9 +262,11 @@ const BookingPage = () => {
                     type="button"
                     onClick={checkConflicts}
                     className="btn btn-secondary"
-                    disabled={!watchedSatellite || !watchedStartTime || !watchedEndTime}
+                    disabled={
+                      !watchedSatellite || !watchedStartTime || !watchedEndTime || isAnalyzing
+                    }
                   >
-                    Check for Conflicts
+                    {isAnalyzing ? 'Analyzing…' : 'Check for Conflicts'}
                   </button>
                   
                   <button
@@ -176,13 +284,13 @@ const BookingPage = () => {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Conflict Status */}
-            {conflictCheck && (
+            {conflictCheck && conflictCheck.analysis && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 className={`card border-l-4 ${
-                  conflictCheck.hasConflict 
-                    ? 'border-red-500 bg-red-900/20' 
+                  conflictCheck.hasConflict
+                    ? 'border-red-500 bg-red-900/20'
                     : 'border-green-500 bg-green-900/20'
                 }`}
               >
@@ -197,11 +305,67 @@ const BookingPage = () => {
                       {conflictCheck.hasConflict ? 'Conflict Detected' : 'No Conflicts'}
                     </h3>
                     <p className="text-sm text-gray-300">
-                      {conflictCheck.reason || conflictCheck.message}
+                      {conflictCheck.hasConflict
+                        ? 'Potential conjunctions identified inside your requested window.'
+                        : 'Requested launch window is clear.'}
                     </p>
                   </div>
                 </div>
+
+                <div className="mt-4 space-y-3 text-sm text-gray-300">
+                  <div>
+                    <span className="font-medium text-white">Requested window:</span>
+                    <br />
+                    {formatTimestamp(conflictCheck.analysis.requested_window_start)}
+                    {' — '}
+                    {formatTimestamp(conflictCheck.analysis.requested_window_end)}
+                  </div>
+                  <div>
+                    <span className="font-medium text-white">Recommended window:</span>
+                    <br />
+                    {formatTimestamp(conflictCheck.analysis.recommended_window_start)}
+                    {' — '}
+                    {formatTimestamp(conflictCheck.analysis.recommended_window_end)}
+                  </div>
+                  <div>
+                    <span className="font-medium text-white">Suggested orbit:</span>
+                    <br />
+                    {conflictCheck.analysis.suggested_orbit.altitude_km.toFixed(1)} km @{' '}
+                    {conflictCheck.analysis.suggested_orbit.inclination_deg.toFixed(2)}°
+                    <p className="text-xs text-gray-400 mt-1">
+                      {conflictCheck.analysis.suggested_orbit.notes}
+                    </p>
+                  </div>
+
+                  {conflictCheck.analysis.conflicts.length > 0 && (
+                    <div className="space-y-2">
+                      <span className="font-medium text-white">Conflicts ({conflictCheck.analysis.conflicts.length}):</span>
+                      <div className="space-y-2">
+                        {conflictCheck.analysis.conflicts.slice(0, 3).map((conflict) => (
+                          <div key={`${conflict.norad_id}-${conflict.time_utc}`} className="rounded-lg border border-white/10 bg-black/40 p-3">
+                            <div className="flex items-center justify-between text-xs text-gray-300">
+                              <span>{conflict.name}</span>
+                              <span>{conflict.miss_distance_km.toFixed(2)} km miss</span>
+                            </div>
+                            <div className="mt-1 text-[11px] text-gray-400">
+                              {formatTimestamp(conflict.time_utc)} · {conflict.relative_speed_km_s.toFixed(2)} km/s
+                            </div>
+                          </div>
+                        ))}
+                        {conflictCheck.analysis.conflicts.length > 3 && (
+                          <p className="text-xs text-gray-500">+{conflictCheck.analysis.conflicts.length - 3} additional conflicts</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </motion.div>
+            )}
+
+            {analysisError && (
+              <div className="rounded-lg border border-red-500/40 bg-red-500/10 p-4 text-sm text-red-200">
+                {analysisError}
+              </div>
             )}
 
             {/* Operation Guidelines */}

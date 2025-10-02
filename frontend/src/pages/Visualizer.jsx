@@ -13,10 +13,10 @@ import {
   Layers,
   RefreshCw,
 } from 'lucide-react'
-import { useSatellitesStore, useRiskStore } from '../stores/dataStores'
+import { useEnhancedSatellitesStore } from '../stores/enhancedStores'  
 import { api } from '../stores/authStore'
-import ConjunctionAnalysis from '../components/ConjunctionAnalysis'
-import SatelliteService from '../services/satelliteService'
+import EnhancedConjunctionAnalysis from '../components/EnhancedConjunctionAnalysis'
+import EnhancedSatelliteService from '../services/satelliteService_enhanced'
 import toast from 'react-hot-toast'
 
 // Set Cesium base URL
@@ -48,10 +48,9 @@ const Visualizer = () => {
   const [tleRecords, setTleRecords] = useState([])
 
   const observerLocation = useMemo(() => ({ lat: 40.7128, lng: -74.0060 }), [])
-  const satelliteService = useMemo(() => new SatelliteService(), [])
+  const satelliteService = useMemo(() => new EnhancedSatelliteService(), [])
   
-  const { satellites, loadSatellites, loadRealTimeSatellites, demoMode } = useSatellitesStore()
-  const { riskData, loadRiskData } = useRiskStore()
+  const { satellites, loadSatellites, isLoading } = useEnhancedSatellitesStore()
 
   const formatNumber = (value, fractionDigits = 2, suffix = '') => {
     if (value === null || value === undefined) {
@@ -115,28 +114,35 @@ const Visualizer = () => {
   const fetchLiveSatellites = useCallback(async () => {
     setIsLoadingRealTime(true)
     try {
-      // Get live satellite positions from our secure local backend
-      const satellites = await satelliteService.getLiveSatellites({
-        latitude: observerLocation.lat,
-        longitude: observerLocation.lng,
-        limit: 50 // Get top 50 visible satellites
+      console.log('🚀 Fetching live satellites from enhanced API...')
+      
+      // Use the real satellite data from our enhanced API
+      const realSatellites = await satelliteService.fetchSatellites({
+        observerLat: observerLocation.lat,
+        observerLng: observerLocation.lng,
+        maxSatellites: 50
       })
       
-      if (satellites && satellites.length > 0) {
+      console.log(`📡 Received ${realSatellites.length} satellites from enhanced API`)
+      
+      if (realSatellites && realSatellites.length > 0) {
         // Transform backend data to match frontend expectations
-        const transformedSatellites = satellites.map(sat => ({
+        const transformedSatellites = realSatellites.slice(0, 50).map(sat => ({
           satid: sat.norad_id,
           satname: sat.name,
           satlat: sat.latitude,
           satlng: sat.longitude,
           satalt: sat.altitude,
           inclination: sat.inclination || 0,
-          source: 'local-backend'
+          source: 'enhanced-api'
         }))
         
+        console.log(`✅ Displaying ${transformedSatellites.length} real satellites:`, transformedSatellites.slice(0, 3).map(s => s.satname))
+        
         setRealTimeSatellites(transformedSatellites)
-        toast.success(`Updated ${satellites.length} live satellite positions`, { id: 'live-satellites' })
+        toast.success(`Updated ${transformedSatellites.length} live satellite positions from enhanced API`, { id: 'live-satellites' })
       } else {
+        console.log('⚠️ No satellites received, using fallback')
         // Use propagated TLE data as fallback
         if (tleRecords.length > 0) {
           const currentTime = new Date()
@@ -207,22 +213,21 @@ const Visualizer = () => {
     }
   }, [])
 
-  useEffect(() => {
-    if (!viewerReady || !viewerRef.current) {
-      return
-    }
-
-    const viewer = viewerRef.current.cesiumElement
-
-    if (!viewerConfiguredRef.current) {
-      // Enhanced Earth appearance
-      viewer.scene.globe.enableLighting = true
-      viewer.scene.globe.dynamicAtmosphereLighting = true
-      viewer.scene.globe.atmosphereLightIntensity = 2.0
-      viewer.scene.globe.showWaterEffect = true
-      viewer.scene.globe.maximumScreenSpaceError = 1
+  const loadEarthModel = async (viewer) => {
+    // Load NASA Earth GLTF model
+    try {
+      const earthModel = await Cesium.Model.fromGltfAsync({
+        url: 'https://solarsystem.nasa.gov/gltf_embed/2393/',
+        scale: 1.0,
+        allowPicking: false
+      })
       
-      // High-resolution Blue Marble imagery
+      viewer.scene.primitives.add(earthModel)
+      console.log('✅ NASA Earth GLTF model loaded successfully')
+    } catch (error) {
+      console.warn('⚠️ Could not load NASA Earth model, using fallback imagery:', error)
+      
+      // Fallback to high-resolution Blue Marble imagery
       viewer.scene.imageryLayers.removeAll()
       viewer.scene.imageryLayers.addImageryProvider(
         new Cesium.IonImageryProvider({ assetId: 3845 }) // Blue Marble Next Generation
@@ -234,6 +239,26 @@ const Visualizer = () => {
       )
       nightLights.dayAlpha = 0.0
       nightLights.nightAlpha = 1.0
+    }
+  }
+
+  useEffect(() => {
+    if (!viewerReady || !viewerRef.current) {
+      return
+    }
+
+    const viewer = viewerRef.current.cesiumElement
+
+    if (!viewerConfiguredRef.current) {
+      // Enhanced Earth appearance with NASA GLTF model
+      viewer.scene.globe.enableLighting = true
+      viewer.scene.globe.dynamicAtmosphereLighting = true
+      viewer.scene.globe.atmosphereLightIntensity = 2.0
+      viewer.scene.globe.showWaterEffect = true
+      viewer.scene.globe.maximumScreenSpaceError = 1
+      
+      // Load Earth model asynchronously
+      loadEarthModel(viewer)
       
       // Enhanced atmosphere
       viewer.scene.skyAtmosphere.brightnessShift = 0.4

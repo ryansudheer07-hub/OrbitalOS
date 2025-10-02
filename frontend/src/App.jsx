@@ -7,7 +7,7 @@ import LoadingSpinner from './components/LoadingSpinner'
 import Layout from './components/Layout'
 
 const Dashboard = lazy(() => import('./pages/Dashboard'))
-const Visualizer = lazy(() => import('./pages/Visualizer'))
+const Visualizer = lazy(() => import('./pages/SimpleVisualizer'))
 const BookingPage = lazy(() => import('./pages/BookingPage'))
 const AlertsPage = lazy(() => import('./pages/AlertsPage'))
 

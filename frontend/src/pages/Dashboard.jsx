@@ -1,7 +1,18 @@
 import React from 'react'
+import { useLocation } from 'react-router-dom'
 import SatelliteVisualizationNASA from '../components/SatelliteVisualizationNASA'
+import EnhancedConjunctionAnalysis from '../components/EnhancedConjunctionAnalysis'
 
 function Dashboard() {
+  const location = useLocation()
+  const searchParams = new URLSearchParams(location.search)
+  const view = searchParams.get('view')
+
+  // Route to conjunction analysis if view=conflict
+  if (view === 'conflict') {
+    return <EnhancedConjunctionAnalysis />
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white p-8">
       <div className="max-w-7xl mx-auto">
@@ -11,12 +22,12 @@ function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl p-6 border border-slate-700/50">
             <h3 className="text-lg font-semibold mb-2">Active Satellites</h3>
-            <p className="text-3xl font-bold text-blue-400">2,300</p>
+            <p className="text-3xl font-bold text-blue-400">22,174</p>
           </div>
           
           <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl p-6 border border-slate-700/50">
             <h3 className="text-lg font-semibold mb-2">Risk Events</h3>
-            <p className="text-3xl font-bold text-red-400">42</p>
+            <p className="text-3xl font-bold text-red-400">3</p>
           </div>
           
           <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl p-6 border border-slate-700/50">

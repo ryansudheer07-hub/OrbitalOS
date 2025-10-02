@@ -1,20 +1,113 @@
 import { create } from 'zustand'
 import { api } from './authStore'
+import SatelliteService from '../services/satelliteService'
 import toast from 'react-hot-toast'
+
+const MOCK_SATELLITES = [
+  {
+    id: 'sat-1',
+    norad_id: 25544,
+    name: 'ISS (Demo)',
+    operator: 'NASA / Roscosmos',
+    altitude: 408.0,
+    inclination: 51.6,
+    eccentricity: 0.0003,
+    right_ascension: 130.5,
+    argument_of_perigee: 87.6,
+    mean_anomaly: 142.1,
+    mean_motion: 15.49,
+    epoch: new Date().toISOString(),
+    tle_line1: '',
+    tle_line2: '',
+    is_active: true,
+    latitude: 0,
+    longitude: 0,
+  },
+  {
+    id: 'sat-2',
+    norad_id: 43001,
+    name: 'Starlink-1001 (Demo)',
+    operator: 'SpaceX',
+    altitude: 550.0,
+    inclination: 53.0,
+    eccentricity: 0.0002,
+    right_ascension: 80.3,
+    argument_of_perigee: 45.0,
+    mean_anomaly: 20.0,
+    mean_motion: 15.05,
+    epoch: new Date().toISOString(),
+    tle_line1: '',
+    tle_line2: '',
+    is_active: true,
+    latitude: 10,
+    longitude: -40,
+  },
+  {
+    id: 'sat-3',
+    norad_id: 54001,
+    name: 'OneWeb-1 (Demo)',
+    operator: 'OneWeb',
+    altitude: 1200.0,
+    inclination: 87.4,
+    eccentricity: 0.0001,
+    right_ascension: 230.1,
+    argument_of_perigee: 12.4,
+    mean_anomaly: 300.0,
+    mean_motion: 14.2,
+    epoch: new Date().toISOString(),
+    tle_line1: '',
+    tle_line2: '',
+    is_active: true,
+    latitude: -20,
+    longitude: 80,
+  },
+]
+
+const MOCK_REAL_TIME_SATELLITES = [
+  {
+    satid: 25544,
+    satname: 'ISS (Demo)',
+    satlat: 18.6,
+    satlng: -72.1,
+    satalt: 420,
+  },
+  {
+    satid: 40373,
+    satname: 'COSMOS 2499 (Demo)',
+    satlat: -12.4,
+    satlng: 32.2,
+    satalt: 1500,
+  },
+  {
+    satid: 43001,
+    satname: 'Starlink-1001 (Demo)',
+    satlat: 47.2,
+    satlng: 12.4,
+    satalt: 540,
+  },
+]
 
 export const useSatellitesStore = create((set, get) => ({
   satellites: [],
+  demoMode: false,
   isLoading: false,
   error: null,
 
   loadSatellites: async () => {
     set({ isLoading: true, error: null })
     try {
-      const response = await api.get('/satellites')
-      set({ satellites: response.data, isLoading: false })
+      // Use the enhanced satellite service with 22,174 satellites
+      const satelliteService = new SatelliteService()
+      
+      const satellites = await satelliteService.fetchSatellites()
+      console.log(`✅ Loaded ${satellites.length} satellites from enhanced API`)
+      set({ satellites: satellites, isLoading: false, demoMode: false })
     } catch (error) {
-      set({ error: error.message, isLoading: false })
-      toast.error('Failed to load satellites')
+      console.error('Failed to load satellites from enhanced API, falling back to demo data', error)
+      toast('Running with demo satellite catalog', {
+        icon: '🛰️',
+      })
+      set({ satellites: MOCK_SATELLITES, isLoading: false, error: null, demoMode: true })
     }
   },
 
@@ -25,8 +118,12 @@ export const useSatellitesStore = create((set, get) => ({
       })
       return response.data
     } catch (error) {
-      toast.error('Failed to load real-time satellites')
-      throw error
+      console.error('Failed to load real-time satellites, falling back to demo data', error)
+      toast('Using demo passes for current overhead view', {
+        icon: '📡',
+      })
+      set({ demoMode: true })
+      return MOCK_REAL_TIME_SATELLITES
     }
   },
 
