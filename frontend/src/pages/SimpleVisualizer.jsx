@@ -15,6 +15,9 @@ const Visualizer = () => {
   const formatNumber = (value, digits = 2) =>
     Number.isFinite(value) ? value.toFixed(digits) : '—'
 
+  const formatLabel = (value) =>
+    value ? value.replace(/[-_]/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase()) : 'Unknown'
+
   const handleSelectSatellite = (satellite) => {
     setSelectedSatellite(satellite)
   }
@@ -315,6 +318,108 @@ const Visualizer = () => {
           )}
         </div>
       </div>
+
+      <AnimatePresence>
+        {selectedSatellite && (
+          <motion.div
+            key={selectedSatellite.norad_id ?? selectedSatellite.id ?? 'detail-panel'}
+            initial={{ opacity: 0, y: 40, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 40, scale: 0.95 }}
+            transition={{ type: 'spring', stiffness: 180, damping: 22 }}
+            className="fixed bottom-8 right-8 w-full max-w-md bg-gradient-to-br from-slate-950/95 via-slate-900/90 to-slate-800/90 border border-slate-700/60 backdrop-blur-2xl rounded-2xl shadow-2xl shadow-blue-500/20 p-6 z-20"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs uppercase tracking-wide text-slate-400 mb-1">Selected Satellite</p>
+                <h3 className="text-xl font-semibold text-white leading-tight">
+                  {selectedSatellite.name}
+                </h3>
+                <p className="text-sm text-slate-400 mt-1">
+                  NORAD {selectedSatellite.norad_id ?? '—'} • {formatLabel(selectedSatellite.type)}
+                </p>
+              </div>
+              <button
+                onClick={() => setSelectedSatellite(null)}
+                className="p-1 rounded-full bg-slate-800/60 hover:bg-slate-700/80 transition-colors border border-slate-600/60 text-slate-300 hover:text-white"
+                aria-label="Close satellite details"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 mt-6 text-sm">
+              <div className="flex flex-col gap-1 rounded-xl bg-slate-900/60 border border-slate-700/60 p-3">
+                <div className="flex items-center gap-2 text-slate-400 text-xs uppercase tracking-wide">
+                  <Globe className="w-4 h-4 text-blue-300" /> Latitude
+                </div>
+                <span className="text-base font-semibold text-white">
+                  {formatNumber(selectedSatellite.latitude, 2)}°
+                </span>
+              </div>
+              <div className="flex flex-col gap-1 rounded-xl bg-slate-900/60 border border-slate-700/60 p-3">
+                <div className="flex items-center gap-2 text-slate-400 text-xs uppercase tracking-wide">
+                  <Compass className="w-4 h-4 text-emerald-300" /> Longitude
+                </div>
+                <span className="text-base font-semibold text-white">
+                  {formatNumber(selectedSatellite.longitude, 2)}°
+                </span>
+              </div>
+              <div className="flex flex-col gap-1 rounded-xl bg-slate-900/60 border border-slate-700/60 p-3">
+                <div className="flex items-center gap-2 text-slate-400 text-xs uppercase tracking-wide">
+                  <GaugeCircle className="w-4 h-4 text-indigo-300" /> Altitude
+                </div>
+                <span className="text-base font-semibold text-white">
+                  {formatNumber(selectedSatellite.alt_km ?? selectedSatellite.altitude, 1)} km
+                </span>
+              </div>
+              <div className="flex flex-col gap-1 rounded-xl bg-slate-900/60 border border-slate-700/60 p-3">
+                <div className="flex items-center gap-2 text-slate-400 text-xs uppercase tracking-wide">
+                  <Activity className="w-4 h-4 text-amber-300" /> Velocity
+                </div>
+                <span className="text-base font-semibold text-white">
+                  {formatNumber(selectedSatellite.velocity_km_s ?? selectedSatellite.velocity, 2)} km/s
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-5 flex flex-wrap items-center gap-3 text-xs text-slate-400">
+              <span className="px-3 py-1 rounded-full bg-slate-800/60 border border-slate-700/60">
+                Source: {formatLabel(selectedSatellite.source)}
+              </span>
+              {selectedSatellite.timestamp && (
+                <span className="px-3 py-1 rounded-full bg-slate-800/60 border border-slate-700/60">
+                  Updated: {new Date(selectedSatellite.timestamp).toLocaleString()}
+                </span>
+              )}
+            </div>
+
+            {(selectedSatellite.riskLevel || Number.isFinite(selectedSatellite.riskScore)) && (
+              <div className="mt-6 flex items-start gap-3 rounded-xl bg-slate-900/60 border border-slate-700/60 p-3">
+                <AlertTriangle className="w-5 h-5 text-amber-300 mt-0.5" />
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-slate-400">Risk Assessment</p>
+                  {selectedSatellite.riskLevel && (
+                    <p className="text-sm font-semibold text-white mt-1">
+                      {formatLabel(selectedSatellite.riskLevel)}
+                    </p>
+                  )}
+                  {Number.isFinite(selectedSatellite.riskScore) && (
+                    <p className="text-xs text-slate-400 mt-1">
+                      Score: {formatNumber(selectedSatellite.riskScore, 4)}
+                    </p>
+                  )}
+                  {selectedSatellite.riskReason && (
+                    <p className="text-xs text-slate-500 mt-2 leading-relaxed">
+                      {selectedSatellite.riskReason}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
