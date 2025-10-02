@@ -2,7 +2,8 @@
 import { persist } from 'zustand/middleware'
 import axios from 'axios'
 
-const API_BASE_URL = 'http://localhost:3000/api'
+const API_ROOT = (import.meta.env?.VITE_API_URL || 'http://localhost:8080').replace(/\/$/, '')
+const API_BASE_URL = `${API_ROOT}/api/v1`
 
 // Create axios instance with default config
 export const api = axios.create({

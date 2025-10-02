@@ -37,10 +37,34 @@ ai/notebooks/.ipynb_checkpoints
 *.p12
 *.db
 *.sqlite
+.secrets
+.secrets.*
 .envrc
 secrets/
 config/local_*.yaml
 config/*.local.json
+config/*.secrets.*
+config/*api_keys*.json
+
+# Local environment overrides
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+backend/.env.local
+backend/.env.development
+backend/.env.production
+backend/sat_api/.env
+backend/sat_api/.env.*
+
+# Generated ML state / sensitive artifacts
+backend/sat_api/data/
+backend/sat_api/risk_model_state.json
+data/risk_model_state.json
+**/risk_model_state.json
+**/api_keys.json
+**/credentials.json
+
 
 # Logs / Temp
 *.log

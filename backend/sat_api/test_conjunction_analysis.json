@@ -1,0 +1,11 @@
+{
+  "satellite_ids": [],
+  "analysis_window_hours": 24,
+  "distance_threshold_km": 5.0,
+  "probability_threshold": 0.001,
+  "screening_parameters": {
+    "coarse_distance_km": 10.0,
+    "close_approach_distance_km": 2.0,
+    "time_window_hours": 72
+  }
+}
