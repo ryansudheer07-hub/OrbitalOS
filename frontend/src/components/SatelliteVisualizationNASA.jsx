@@ -182,7 +182,6 @@ const FILTERS = {
 
 const Earth = React.memo(() => {
   const { map, emissiveMap, cloudsMap } = useTexture(TEXTURE_URLS)
-  const earthRef = useRef()
   const cloudsRef = useRef()
 
   useMemo(() => {
@@ -195,17 +194,14 @@ const Earth = React.memo(() => {
   }, [map, emissiveMap, cloudsMap])
 
   useFrame((_, delta) => {
-    if (earthRef.current) {
-      earthRef.current.rotation.y += delta * EARTH_ROTATION_RAD_PER_SEC
-    }
     if (cloudsRef.current) {
-      cloudsRef.current.rotation.y += delta * EARTH_ROTATION_RAD_PER_SEC * 1.2
+      cloudsRef.current.rotation.y += delta * EARTH_ROTATION_RAD_PER_SEC * 0.2
     }
   })
 
   return (
     <group>
-      <mesh ref={earthRef}>
+      <mesh>
         <sphereGeometry args={[1, 128, 128]} />
         <meshStandardMaterial
           map={map}
@@ -233,6 +229,18 @@ const Earth = React.memo(() => {
     </group>
   )
 })
+
+const EarthFrame = ({ children }) => {
+  const frameRef = useRef(null)
+
+  useFrame((_, delta) => {
+    if (frameRef.current) {
+      frameRef.current.rotation.y += delta * EARTH_ROTATION_RAD_PER_SEC
+    }
+  })
+
+  return <group ref={frameRef}>{children}</group>
+}
 
 const SatellitePoints = React.memo(({
   processedSatellites,
@@ -712,23 +720,25 @@ const SatelliteVisualizationNASA = () => {
 
         <Stars radius={120} depth={50} count={6000} factor={2} saturation={0} fade speed={0.2} />
 
-        <Earth />
-        <SatellitePoints
-          processedSatellites={processedSatellites}
-          previousMap={previousSatellitesMap}
-          colors={colorArray}
-          lastUpdateTime={lastUpdateTime}
-          refreshMs={REALTIME_REFRESH_MS}
-          onSelect={handlePointSelect}
-        />
-        {selectedDatum && (
-          <SelectedMarker
-            currentDatum={selectedDatum}
-            previousDatum={selectedPreviousDatum}
+        <EarthFrame>
+          <Earth />
+          <SatellitePoints
+            processedSatellites={processedSatellites}
+            previousMap={previousSatellitesMap}
+            colors={colorArray}
             lastUpdateTime={lastUpdateTime}
             refreshMs={REALTIME_REFRESH_MS}
+            onSelect={handlePointSelect}
           />
-        )}
+          {selectedDatum && (
+            <SelectedMarker
+              currentDatum={selectedDatum}
+              previousDatum={selectedPreviousDatum}
+              lastUpdateTime={lastUpdateTime}
+              refreshMs={REALTIME_REFRESH_MS}
+            />
+          )}
+        </EarthFrame>
 
         <OrbitControls
           enablePan
