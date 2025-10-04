@@ -2,8 +2,12 @@ import React, { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, useCycle } from 'framer-motion'
 import GlobalHeader from '../components/GlobalHeader'
+
+// Image URLs for hero gallery
+const cosmicBackgroundUrl = '/cosmic-background.jpg'
 const featureVideoUrl = new URL('../../../visuals/44350-438661984.mp4', import.meta.url).href
 const earthCtaImageUrl = new URL('../../../visuals/Coming Soon Website Coming Soon Page in Black White Dark Futuristic Style.png', import.meta.url).href
+const satelliteIconUrl = '/satellite-icon.png'
 
 const FEATURE_TAGS = [
   { label: 'Real-time collision alerts', icon: '🛰️' },
@@ -68,84 +72,216 @@ function LandingPage() {
       <GlobalHeader />
 
       {/* Hero Section */}
-      <div className="relative min-h-screen overflow-hidden bg-black text-white flex items-center justify-center px-6 pt-32 pb-16">
-        <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-gradient-to-b from-gray-800 via-gray-900 to-black" />
-          <div className="absolute inset-0 overflow-hidden">
-            <div
-              className="absolute inset-0 will-change-transform"
+<div className="cosmic-background relative min-h-screen overflow-hidden text-white">
+        <div className="cosmic-overlay" />
+        <div className="cosmic-particles">
+          {stars.map((star) => (
+            <span
+              key={star.id}
+              className="cosmic-particle absolute"
               style={{
-                transform: `translate3d(${scrollY * -0.02}px, ${scrollY * -0.08}px, 0)`
+                left: `${star.left}%`,
+                top: `${star.top}%`,
+                width: `${star.size}px`,
+                height: `${star.size}px`,
+                opacity: star.opacity,
+                animation: `twinkle ${star.duration}s ease-in-out ${star.delay}s infinite alternate`
               }}
-            >
-              {stars.map((star) => (
-                <span
-                  key={star.id}
-                  className="absolute rounded-full bg-white"
-                  style={{
-                    left: `${star.left}%`,
-                    top: `${star.top}%`,
-                    width: `${star.size}px`,
-                    height: `${star.size}px`,
-                    opacity: star.opacity,
-                    animation: `star-float ${star.duration}s ease-in-out ${star.delay}s infinite alternate`
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-          <motion.div
-            className="pointer-events-none absolute -top-40 -left-32 h-[540px] w-[540px] bg-gradient-to-tr from-sky-400/70 via-blue-500/40 to-purple-500/60 blur-3xl"
-            animate={{
-              borderRadius: activeMorph.borderRadius,
-              rotate: activeMorph.rotate,
-              opacity: [0.28, 0.42, 0.32],
-            }}
-            transition={{ duration: 6, repeat: Infinity, repeatType: 'mirror', ease: 'easeInOut' }}
-          />
-          <motion.div
-            className="pointer-events-none absolute bottom-0 right-0 h-[480px] w-[480px] bg-gradient-to-br from-amber-400/70 via-rose-500/40 to-indigo-500/60 blur-3xl"
-            animate={{
-              borderRadius: activeMorph.borderRadius,
-              rotate: activeMorph.rotate.map((value) => value * -1),
-              opacity: [0.32, 0.5, 0.38],
-            }}
-            transition={{ duration: 6, repeat: Infinity, repeatType: 'mirror', ease: 'easeInOut', delay: 1.2 }}
-          />
+            />
+          ))}
         </div>
 
-        <div className="relative z-20 flex flex-col items-center text-center px-6">
-          <div className="space-y-6">
-            <div className="text-4xl md:text-6xl font-extrabold tracking-[0.35em] uppercase text-white">
-              OrbitalOS
-            </div>
-            <motion.p
-              className="max-w-2xl text-base md:text-lg text-white/70 mx-auto"
-              animate={{ opacity: [0.6, 1, 0.8], y: [0, -6, 0] }}
-              transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+        {/* Main Hero Content */}
+        <div className="cosmic-content relative z-20 min-h-screen flex flex-col justify-center px-6 py-20">
+          {/* Title Section */}
+          <div className="text-center mb-16 max-w-6xl mx-auto">
+            <motion.div 
+              className="cosmic-text text-5xl md:text-7xl lg:text-8xl font-black tracking-[0.05em] uppercase mb-6"
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1, ease: "easeOut" }}
             >
-              Making space accessible, predictable, and safe for generations to come.
+              OrbitalOS
+            </motion.div>
+            <motion.div 
+              className="w-24 h-1 bg-gradient-to-r from-blue-400 to-purple-500 mx-auto mb-8"
+              initial={{ width: 0 }}
+              animate={{ width: 96 }}
+              transition={{ duration: 1.5, delay: 0.5 }}
+            />
+            <motion.p
+              className="cosmic-text-secondary max-w-3xl text-lg md:text-xl mx-auto leading-relaxed"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 1, delay: 0.8 }}
+            >
+              Next-generation orbital mechanics platform. Real-time satellite tracking, 
+              AI-powered collision detection, and mission-critical space operations.
             </motion.p>
+          </div>
+
+          {/* Mission Gallery Grid */}
+          <div className="max-w-7xl mx-auto w-full">
+            <motion.div 
+              className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12"
+              initial={{ opacity: 0, y: 100 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1, delay: 1.2 }}
+            >
+              {/* Featured Video - Large Card */}
+              <div className="lg:col-span-2">
+                <div className="group relative overflow-hidden rounded-2xl bg-black/40 backdrop-blur-sm border border-white/10 hover:border-white/30 transition-all duration-500">
+                  <div className="relative">
+                    <video 
+                      src={featureVideoUrl}
+                      className="w-full h-96 object-cover group-hover:scale-105 transition-transform duration-700"
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                    <div className="absolute bottom-0 left-0 right-0 p-8">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                        <span className="text-xs uppercase tracking-widest text-red-400 font-semibold">LIVE MISSION</span>
+                      </div>
+                      <h3 className="text-2xl md:text-3xl font-bold mb-3 text-white">Orbital Mechanics Demo</h3>
+                      <p className="text-white/80 text-base leading-relaxed max-w-2xl">
+                        Real-time satellite trajectory visualization with SGP4 propagation models and collision analysis algorithms
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Image Cards Grid */}
+            <motion.div 
+              className="grid grid-cols-1 md:grid-cols-3 gap-6"
+              initial={{ opacity: 0, y: 100 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1, delay: 1.6 }}
+            >
+              {/* Cosmic Overview Card */}
+              <div className="group relative overflow-hidden rounded-xl bg-black/30 backdrop-blur-sm border border-white/10 hover:border-blue-400/50 transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/20">
+                <div className="relative">
+                  <img 
+                    src={cosmicBackgroundUrl} 
+                    alt="Cosmic Space Overview" 
+                    className="w-full h-56 object-cover group-hover:scale-110 transition-transform duration-700"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+                  <div className="absolute top-4 right-4">
+                    <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                  </div>
+                </div>
+                <div className="p-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-2xl">🌍</span>
+                    <span className="text-xs uppercase tracking-widest text-blue-400 font-semibold">EARTH OVERVIEW</span>
+                  </div>
+                  <h4 className="text-lg font-bold text-white mb-2">Planetary Systems</h4>
+                  <p className="text-white/70 text-sm leading-relaxed">
+                    Complete view of Earth-Moon system, planetary positions, and ISS orbital tracking
+                  </p>
+                </div>
+              </div>
+
+              {/* Mission Control Card */}
+              <div className="group relative overflow-hidden rounded-xl bg-black/30 backdrop-blur-sm border border-white/10 hover:border-purple-400/50 transition-all duration-500 hover:shadow-2xl hover:shadow-purple-500/20">
+                <div className="relative">
+                  <img 
+                    src={earthCtaImageUrl} 
+                    alt="Mission Control Interface" 
+                    className="w-full h-56 object-cover group-hover:scale-110 transition-transform duration-700"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+                  <div className="absolute top-4 right-4">
+                    <div className="w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
+                  </div>
+                </div>
+                <div className="p-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-2xl">🚀</span>
+                    <span className="text-xs uppercase tracking-widest text-purple-400 font-semibold">COMMAND CENTER</span>
+                  </div>
+                  <h4 className="text-lg font-bold text-white mb-2">Mission Control</h4>
+                  <p className="text-white/70 text-sm leading-relaxed">
+                    Advanced space operations interface with real-time telemetry and mission planning
+                  </p>
+                </div>
+              </div>
+
+              {/* Satellite Tracking Card */}
+              <div className="group relative overflow-hidden rounded-xl bg-black/30 backdrop-blur-sm border border-white/10 hover:border-cyan-400/50 transition-all duration-500 hover:shadow-2xl hover:shadow-cyan-500/20">
+                <div className="relative h-56 flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800">
+                  <img 
+                    src={satelliteIconUrl} 
+                    alt="Satellite Tracking" 
+                    className="w-24 h-24 group-hover:scale-125 group-hover:rotate-12 transition-all duration-700"
+                  />
+                  <div className="absolute top-4 right-4">
+                    <div className="w-3 h-3 bg-cyan-400 rounded-full animate-pulse"></div>
+                  </div>
+                  {/* Orbital rings animation */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-32 h-32 border border-cyan-400/30 rounded-full animate-spin" style={{ animationDuration: '20s' }}></div>
+                    <div className="absolute w-40 h-40 border border-cyan-400/20 rounded-full animate-spin" style={{ animationDuration: '30s', animationDirection: 'reverse' }}></div>
+                  </div>
+                </div>
+                <div className="p-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-2xl">🛰️</span>
+                    <span className="text-xs uppercase tracking-widest text-cyan-400 font-semibold">TRACKING SYSTEM</span>
+                  </div>
+                  <h4 className="text-lg font-bold text-white mb-2">Satellite Network</h4>
+                  <p className="text-white/70 text-sm leading-relaxed">
+                    Precision orbital mechanics with AI-powered collision detection and avoidance
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* CTA Section */}
+            <motion.div 
+              className="text-center mt-16"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 1, delay: 2 }}
+            >
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <button
+                  onClick={() => navigate('/booking')}
+                  className="group px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl text-white font-semibold uppercase tracking-wider transition-all duration-300 hover:from-blue-500 hover:to-purple-500 hover:shadow-xl hover:shadow-purple-500/25 hover:scale-105"
+                >
+                  <span className="flex items-center gap-3">
+                    Launch Mission
+                    <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  </span>
+                </button>
+                <button
+                  onClick={() => navigate('/dashboard')}
+                  className="px-8 py-4 border border-white/30 rounded-xl text-white font-semibold uppercase tracking-wider transition-all duration-300 hover:bg-white/10 hover:border-white/50"
+                >
+                  Mission Control
+                </button>
+              </div>
+            </motion.div>
           </div>
         </div>
       </div>
 
-      <section className="relative overflow-hidden bg-black text-white min-h-screen flex items-center py-24">
-        <video
-          className="absolute inset-0 h-full w-full object-cover opacity-40"
-          src={featureVideoUrl}
-          autoPlay
-          loop
-          muted
-          playsInline
-        />
-        <div className="absolute inset-0 bg-black/60" />
-        <div className="relative z-10 max-w-5xl mx-auto px-6 space-y-10">
+      <section className="cosmic-background relative overflow-hidden text-white min-h-screen flex items-center py-24">
+        <div className="cosmic-overlay" />
+        <div className="cosmic-content relative z-10 max-w-5xl mx-auto px-6 space-y-10">
           <div className="text-center space-y-3">
-            <h2 className="text-3xl md:text-4xl font-semibold tracking-[0.35em] uppercase text-white">
+            <h2 className="cosmic-text text-3xl md:text-4xl font-semibold tracking-[0.35em] uppercase">
               Mission Suite
             </h2>
-            <p className="text-sm md:text-base text-white/70">
+            <p className="cosmic-text-secondary text-sm md:text-base">
               Tools engineered to keep your fleet in motion.
             </p>
           </div>
@@ -153,10 +289,10 @@ function LandingPage() {
             {FEATURE_TAGS.map((tag) => (
               <div
                 key={tag.label}
-                className="flex h-28 flex-col items-start justify-between rounded-xl border border-white/10 bg-black/60 px-6 py-5"
+                className="cosmic-card flex h-28 flex-col items-start justify-between px-6 py-5"
               >
                 <span className="text-2xl">{tag.icon}</span>
-                <p className="text-sm font-medium text-white/80 leading-snug">
+                <p className="cosmic-text-secondary text-sm font-medium leading-snug">
                   {tag.label}
                 </p>
               </div>
@@ -165,15 +301,8 @@ function LandingPage() {
         </div>
       </section>
 
-      <section className="relative flex min-h-screen items-center justify-center bg-black px-6 py-24 text-white">
-        <div className="absolute inset-0">
-          <img
-            src={earthCtaImageUrl}
-            alt="Earth horizon"
-            className="h-full w-full object-cover opacity-40"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-black" />
-        </div>
+      <section className="cosmic-background relative flex min-h-screen items-center justify-center px-6 py-24 text-white">
+        <div className="cosmic-overlay" />
 
         <div className="relative z-10 flex w-full max-w-6xl flex-col items-start gap-10 lg:flex-row lg:items-center lg:justify-between">
           <div className="max-w-xl space-y-6">

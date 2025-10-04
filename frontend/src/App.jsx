@@ -5,6 +5,7 @@ import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/LoginPage'
 import LoadingSpinner from './components/LoadingSpinner'
 import Layout from './components/Layout'
+import CosmicStars from './components/CosmicStars'
 
 const Dashboard = lazy(() => import('./pages/Dashboard'))
 const Visualizer = lazy(() => import('./pages/SimpleVisualizer'))
@@ -19,8 +20,12 @@ function App() {
   }
 
   return (
-    <Suspense fallback={<LoadingSpinner />}>
-      <Routes>
+    <div className="cosmic-background">
+      <CosmicStars count={100} />
+      <div className="cosmic-nebula" />
+      <div className="cosmic-aurora" />
+      <Suspense fallback={<LoadingSpinner />}>
+        <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
 
@@ -46,6 +51,7 @@ function App() {
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Suspense>
+    </div>
   )
 }
 
