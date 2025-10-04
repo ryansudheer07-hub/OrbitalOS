@@ -1,4 +1,4 @@
-/* Modern Cosmic Background Styles */
+/* Modern Cosmic Background Styles with Parallax Support */
 .cosmic-background {
   background-image: url('/cosmic-background.jpg');
   background-size: cover;
@@ -7,6 +7,9 @@
   background-attachment: fixed;
   min-height: 100vh;
   position: relative;
+  will-change: transform;
+  backface-visibility: hidden;
+  perspective: 1000px;
 }
 
 .cosmic-background::before {
@@ -18,11 +21,15 @@
   bottom: 0;
   background: rgba(0, 0, 0, 0.4);
   z-index: 1;
+  will-change: transform;
 }
 
+/* Optimized content for parallax */
 .cosmic-content {
   position: relative;
   z-index: 2;
+  will-change: transform;
+  transform-style: preserve-3d;
 }
 
 /* Enhanced cosmic overlay for better text readability */
@@ -40,6 +47,8 @@
     rgba(0, 0, 10, 0.9) 100%
   );
   z-index: 1;
+  will-change: transform;
+  backface-visibility: hidden;
 }
 
 /* Backdrop blur support for modern cards */
@@ -150,4 +159,33 @@
     transform: translateX(100vw) translateY(100vh);
     opacity: 0;
   }
+}
+
+/* Parallax performance optimizations */
+.parallax-element {
+  will-change: transform;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+}
+
+/* Enhanced particle system for parallax */
+.cosmic-particles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 1;
+  will-change: transform;
+  transform-style: preserve-3d;
+}
+
+.cosmic-particle {
+  position: absolute;
+  background: #ffffff;
+  border-radius: 50%;
+  pointer-events: none;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
 }

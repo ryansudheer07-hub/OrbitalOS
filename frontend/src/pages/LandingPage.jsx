@@ -31,6 +31,7 @@ const MORPH_KEYFRAMES = [
 
 function LandingPage() {
   const [scrollY, setScrollY] = useState(0)
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const navigate = useNavigate()
   const [morphIndex, cycleMorphIndex] = useCycle(0, 1)
 
@@ -39,9 +40,18 @@ function LandingPage() {
       setScrollY(window.scrollY)
     }
 
+    const handleMouseMove = (e) => {
+      setMousePosition({
+        x: (e.clientX - window.innerWidth / 2) / window.innerWidth,
+        y: (e.clientY - window.innerHeight / 2) / window.innerHeight
+      })
+    }
+
     window.addEventListener('scroll', handleScroll)
+    window.addEventListener('mousemove', handleMouseMove)
     return () => {
       window.removeEventListener('scroll', handleScroll)
+      window.removeEventListener('mousemove', handleMouseMove)
     }
   }, [])
 
@@ -72,9 +82,31 @@ function LandingPage() {
       <GlobalHeader />
 
       {/* Hero Section */}
-<div className="cosmic-background relative min-h-screen overflow-hidden text-white">
-        <div className="cosmic-overlay" />
-        <div className="cosmic-particles">
+      <div className="cosmic-background relative min-h-screen overflow-hidden text-white">
+        {/* Parallax Background Layer */}
+        <div 
+          className="absolute inset-0 cosmic-background"
+          style={{
+            transform: `translateY(${scrollY * 0.8}px) translateX(${mousePosition.x * 50}px)`,
+            scale: `${1 + Math.abs(mousePosition.x) * 0.05 + Math.abs(mousePosition.y) * 0.05}`
+          }}
+        />
+        
+        {/* Enhanced Cosmic Overlay with Parallax */}
+        <div 
+          className="cosmic-overlay"
+          style={{
+            transform: `translateY(${scrollY * 0.6}px)`
+          }}
+        />
+        
+        {/* Parallax Particle Layers */}
+        <div 
+          className="cosmic-particles"
+          style={{
+            transform: `translateY(${scrollY * 0.4}px) translateX(${mousePosition.x * 60}px)`
+          }}
+        >
           {stars.map((star) => (
             <span
               key={star.id}
@@ -85,14 +117,73 @@ function LandingPage() {
                 width: `${star.size}px`,
                 height: `${star.size}px`,
                 opacity: star.opacity,
-                animation: `twinkle ${star.duration}s ease-in-out ${star.delay}s infinite alternate`
+                animation: `twinkle ${star.duration}s ease-in-out ${star.delay}s infinite alternate`,
+                transform: `translateZ(${star.size * 20}px) translateY(${scrollY * (0.2 + star.size * 0.1)}px) translateX(${mousePosition.x * (10 + star.size * 5)}px)`
               }}
             />
           ))}
         </div>
 
-        {/* Main Hero Content */}
-        <div className="cosmic-content relative z-20 min-h-screen flex flex-col justify-center px-6 py-20">
+        {/* Floating Cosmic Elements */}
+        <div 
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            transform: `translateY(${scrollY * 0.3}px) rotateX(${mousePosition.y * 10}deg) rotateY(${mousePosition.x * 10}deg)`
+          }}
+        >
+          {/* Large floating orbs */}
+          <div 
+            className="absolute top-1/4 left-1/4 w-32 h-32 bg-blue-500/10 rounded-full blur-xl animate-pulse"
+            style={{
+              transform: `translateY(${scrollY * -0.4}px) translateX(${mousePosition.x * 40}px)`
+            }}
+          />
+          <div 
+            className="absolute top-3/4 right-1/4 w-24 h-24 bg-purple-500/10 rounded-full blur-lg animate-pulse" 
+            style={{ 
+              animationDelay: '2s',
+              transform: `translateY(${scrollY * -0.6}px) translateX(${mousePosition.x * -30}px)`
+            }} 
+          />
+          <div 
+            className="absolute top-1/2 right-1/3 w-16 h-16 bg-cyan-500/10 rounded-full blur-md animate-pulse" 
+            style={{ 
+              animationDelay: '4s',
+              transform: `translateY(${scrollY * -0.8}px) translateX(${mousePosition.x * 25}px)`
+            }} 
+          />
+          
+          {/* Additional dramatic floating elements */}
+          <div 
+            className="absolute top-10 left-1/2 w-20 h-20 bg-yellow-500/5 rounded-full blur-lg animate-pulse"
+            style={{
+              animationDelay: '1s',
+              transform: `translateY(${scrollY * -1.2}px) translateX(${mousePosition.x * 60}px) rotate(${scrollY * 0.1}deg)`
+            }}
+          />
+          <div 
+            className="absolute bottom-20 left-1/3 w-28 h-28 bg-pink-500/8 rounded-full blur-xl animate-pulse"
+            style={{
+              animationDelay: '3s',
+              transform: `translateY(${scrollY * -0.9}px) translateX(${mousePosition.x * -45}px) rotate(${scrollY * -0.05}deg)`
+            }}
+          />
+          <div 
+            className="absolute top-2/3 left-10 w-12 h-12 bg-green-500/6 rounded-full blur-md animate-pulse"
+            style={{
+              animationDelay: '5s',
+              transform: `translateY(${scrollY * -1.5}px) translateX(${mousePosition.x * 35}px) rotate(${scrollY * 0.08}deg)`
+            }}
+          />
+        </div>
+
+        {/* Main Hero Content with Parallax */}
+        <div 
+          className="cosmic-content relative z-20 min-h-screen flex flex-col justify-center px-6 py-20"
+          style={{
+            transform: `translateY(${scrollY * -0.25}px) translateX(${mousePosition.x * -20}px)`
+          }}
+        >
           {/* Title Section */}
           <div className="text-center mb-16 max-w-6xl mx-auto">
             <motion.div 
@@ -100,6 +191,9 @@ function LandingPage() {
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, ease: "easeOut" }}
+              style={{
+                transform: `translateY(${scrollY * -0.15}px) perspective(1000px) rotateX(${mousePosition.y * 8}deg) rotateY(${mousePosition.x * 8}deg)`
+              }}
             >
               OrbitalOS
             </motion.div>
@@ -114,6 +208,9 @@ function LandingPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 1, delay: 0.8 }}
+              style={{
+                transform: `translateY(${scrollY * -0.12}px) translateX(${mousePosition.x * 15}px)`
+              }}
             >
               Next-generation orbital mechanics platform. Real-time satellite tracking, 
               AI-powered collision detection, and mission-critical space operations.
@@ -127,6 +224,9 @@ function LandingPage() {
               initial={{ opacity: 0, y: 100 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, delay: 1.2 }}
+              style={{
+                transform: `translateY(${scrollY * -0.2}px) translateX(${mousePosition.x * 30}px) rotateY(${mousePosition.x * 3}deg)`
+              }}
             >
               {/* Featured Video - Large Card */}
               <div className="lg:col-span-2">
@@ -162,6 +262,9 @@ function LandingPage() {
               initial={{ opacity: 0, y: 100 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, delay: 1.6 }}
+              style={{
+                transform: `translateY(${scrollY * -0.3}px) translateX(${mousePosition.x * -25}px) rotateX(${mousePosition.y * 2}deg)`
+              }}
             >
               {/* Cosmic Overview Card */}
               <div className="group relative overflow-hidden rounded-xl bg-black/30 backdrop-blur-sm border border-white/10 hover:border-blue-400/50 transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/20">
@@ -249,6 +352,9 @@ function LandingPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 1, delay: 2 }}
+              style={{
+                transform: `translateY(${scrollY * -0.18}px) scale(${1 + Math.abs(mousePosition.y) * 0.05}) rotateZ(${mousePosition.x * 2}deg)`
+              }}
             >
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                 <button
@@ -275,8 +381,18 @@ function LandingPage() {
       </div>
 
       <section className="cosmic-background relative overflow-hidden text-white min-h-screen flex items-center py-24">
-        <div className="cosmic-overlay" />
-        <div className="cosmic-content relative z-10 max-w-5xl mx-auto px-6 space-y-10">
+        <div 
+          className="cosmic-overlay"
+          style={{
+            transform: `translateY(${scrollY * 0.4}px)`
+          }}
+        />
+        <div 
+          className="cosmic-content relative z-10 max-w-5xl mx-auto px-6 space-y-10"
+          style={{
+            transform: `translateY(${scrollY * -0.35}px) translateX(${mousePosition.x * 20}px) rotateY(${mousePosition.x * 3}deg)`
+          }}
+        >
           <div className="text-center space-y-3">
             <h2 className="cosmic-text text-3xl md:text-4xl font-semibold tracking-[0.35em] uppercase">
               Mission Suite
